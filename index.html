@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RK ANALYSIS — Data-Driven Indian Stock Analysis</title>
+  <meta name="description" content="RK ANALYSIS is a data-driven Indian stock research and screening terminal." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0c1115;
+      --ink-2: #11191d;
+      --panel: #151e22;
+      --panel-2: #1b272c;
+      --line: rgba(218, 240, 235, .11);
+      --line-strong: rgba(218, 240, 235, .19);
+      --text: #f1f5ef;
+      --muted: #8f9e9c;
+      --muted-2: #60706f;
+      --lime: #c9fa6c;
+      --lime-dark: #8dbd35;
+      --mint: #89f0c5;
+      --red: #ff8f87;
+      --amber: #f6c868;
+      --blue: #83b5ff;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .22);
+      --radius: 14px;
+      --sidebar: 252px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      letter-spacing: -.01em;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { min-height: 100vh; display: flex; }
+    .sidebar {
+      width: var(--sidebar); flex: 0 0 var(--sidebar); min-height: 100vh;
+      border-right: 1px solid var(--line); background: #0b1013;
+      padding: 24px 16px 18px; display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; z-index: 4;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 10px 28px; }
+    .brand-mark { width: 30px; height: 30px; background: var(--lime); color: var(--ink); border-radius: 9px; display: grid; place-items: center; font-weight: 800; font-size: 14px; letter-spacing: -.07em; }
+    .brand-name { font-size: 15px; font-weight: 800; letter-spacing: .07em; }
+    .brand-meta { font: 10px 'DM Mono', monospace; color: var(--muted-2); letter-spacing: .04em; margin: 3px 0 0 1px; }
+    .nav-label { font: 10px 'DM Mono', monospace; color: #52615f; text-transform: uppercase; letter-spacing: .12em; padding: 0 12px 9px; }
+    .nav { display: grid; gap: 3px; }
+    .nav button { color: #82908d; background: transparent; border: 0; border-radius: 9px; display: flex; align-items: center; width: 100%; padding: 10px 11px; gap: 11px; text-align: left; transition: .18s ease; }
+    .nav button:hover { background: rgba(201, 250, 108, .06); color: var(--text); }
+    .nav button.active { background: rgba(201, 250, 108, .1); color: var(--lime); box-shadow: inset 3px 0 0 var(--lime); }
+    .nav-icon { width: 17px; text-align: center; font-size: 15px; opacity: .9; }
+    .nav-copy { flex: 1; }
+    .nav-count { font: 10px 'DM Mono', monospace; color: #60706f; }
+    .nav button.active .nav-count { color: var(--lime-dark); }
+    .sidebar-foot { margin-top: auto; }
+    .feed-card { border: 1px solid var(--line); background: rgba(255,255,255,.025); border-radius: 12px; padding: 13px; }
+    .feed-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .feed-title { color: #b9c6c1; font-size: 11px; font-weight: 700; }
+    .live-dot { display: inline-flex; align-items: center; gap: 5px; color: var(--mint); font: 10px 'DM Mono', monospace; }
+    .live-dot::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 3px rgba(137,240,197,.12); }
+    .feed-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; padding-top: 7px; border-top: 1px solid var(--line); margin-top: 7px; }
+    .feed-row strong { color: var(--text); font-weight: 600; }
+    .main { min-width: 0; flex: 1; background: radial-gradient(circle at 76% 0%, rgba(60, 111, 95, .12), transparent 32%), var(--ink); }
+    .topbar { height: 70px; border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 30px; gap: 18px; position: sticky; top: 0; z-index: 3; background: rgba(12,17,21,.88); backdrop-filter: blur(18px); }
+    .crumb { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .crumb b { color: var(--text); font-weight: 600; }
+    .command { flex: 1; max-width: 445px; margin-left: auto; position: relative; }
+    .command input { border: 1px solid var(--line); width: 100%; background: #10181b; border-radius: 8px; padding: 10px 70px 10px 36px; color: var(--text); outline: 0; }
+    .command input:focus { border-color: rgba(201,250,108,.55); box-shadow: 0 0 0 3px rgba(201,250,108,.07); }
+    .command-icon { position: absolute; left: 12px; top: 9px; color: var(--muted); font-size: 14px; }
+    .command-key { position: absolute; right: 10px; top: 8px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); font: 10px 'DM Mono', monospace; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-button { color: var(--muted); border: 1px solid var(--line); width: 32px; height: 32px; border-radius: 8px; background: transparent; }
+    .icon-button:hover { color: var(--lime); border-color: rgba(201,250,108,.45); }
+    .avatar { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%; background: #22332d; border: 1px solid rgba(201,250,108,.4); color: var(--lime); font-size: 11px; font-weight: 800; }
+    .content { max-width: 1700px; margin: 0 auto; padding: 31px 30px 60px; }
+    .eyebrow { color: var(--lime); font: 10px 'DM Mono', monospace; letter-spacing: .16em; text-transform: uppercase; }
+    .hero { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 25px; }
+    h1 { margin: 9px 0 8px; font-size: clamp(27px, 3vw, 40px); line-height: 1.04; letter-spacing: -.055em; font-weight: 700; }
+    .hero-copy { color: var(--muted); max-width: 600px; font-size: 13px; line-height: 1.6; }
+    .hero-right { display: flex; gap: 9px; align-items: center; padding-bottom: 5px; }
+    .status-pill, .source-pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; white-space: nowrap; color: var(--muted); font: 10px 'DM Mono', monospace; }
+    .status-pill { border-color: rgba(137,240,197,.25); color: var(--mint); background: rgba(137,240,197,.05); }
+    .status-pill::before { content:''; width: 5px; height: 5px; border-radius: 50%; background: var(--mint); }
+    .section-title { font-size: 14px; font-weight: 700; letter-spacing: -.02em; }
+    .section-meta { color: var(--muted); font-size: 11px; }
+    .panel { border: 1px solid var(--line); background: linear-gradient(135deg, rgba(255,255,255,.035), rgba(255,255,255,.012)); border-radius: var(--radius); box-shadow: 0 12px 36px rgba(0,0,0,.08); }
+    .market-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; }
+    .market-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 9px; overflow-x: auto; padding-bottom: 3px; }
+    .index-card { min-width: 0; border: 1px solid var(--line); background: rgba(255,255,255,.02); border-radius: 10px; padding: 12px; }
+    .index-card:hover { border-color: rgba(201,250,108,.35); transform: translateY(-1px); }
+    .index-name { color: var(--muted); font: 10px 'DM Mono', monospace; letter-spacing: .03em; }
+    .index-value { font: 500 16px 'DM Mono', monospace; color: #eef5ef; margin: 9px 0 5px; }
+    .index-row { display: flex; justify-content: space-between; font: 10px 'DM Mono', monospace; }
+    .up { color: var(--mint); } .down { color: var(--red); } .neutral { color: var(--amber); }
+    .market-sub { color: var(--muted-2); font-size: 9px; }
+    .overview-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr); gap: 14px; margin-top: 25px; }
+    .chart-card { padding: 18px 20px 14px; min-height: 310px; }
+    .panel-head { display:flex; justify-content:space-between; align-items:start; gap: 14px; }
+    .head-left { display:flex; align-items:center; gap: 9px; }
+    .index-select { color: var(--text); border: 0; background: transparent; font-size: 14px; font-weight: 700; outline: 0; }
+    .chart-tabs { display:flex; gap: 4px; }
+    .chart-tabs button { border: 0; background: transparent; color: var(--muted); padding: 5px 7px; border-radius: 5px; font: 10px 'DM Mono', monospace; }
+    .chart-tabs button.active, .chart-tabs button:hover { background: rgba(201,250,108,.1); color: var(--lime); }
+    .chart-stat { display:flex; align-items:baseline; gap: 10px; margin: 12px 0 4px; }
+    .chart-stat strong { font: 500 25px 'DM Mono', monospace; letter-spacing: -.06em; }
+    .chart-stat span { font: 11px 'DM Mono', monospace; }
+    .chart-wrap { height: 190px; margin-top: 5px; position: relative; }
+    .chart-wrap svg { width:100%; height:100%; overflow: visible; }
+    .chart-grid { stroke: rgba(218,240,235,.08); stroke-width: 1; }
+    .chart-line { fill: none; stroke: var(--lime); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px rgba(201,250,108,.22)); }
+    .chart-area { fill: url(#areaFill); }
+    .chart-axis { display:flex; justify-content:space-between; color: var(--muted-2); font: 9px 'DM Mono', monospace; padding: 1px 2px 0; }
+    .insights { padding: 18px; }
+    .insight-list { margin-top: 14px; display:grid; gap: 10px; }
+    .insight { display:grid; grid-template-columns: 31px 1fr auto; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 11px; }
+    .insight:first-child { border-top: 0; padding-top: 0; }
+    .insight-icon { width: 31px; height: 31px; display:grid; place-items:center; border-radius: 8px; background: rgba(201,250,108,.1); color: var(--lime); font-size: 14px; }
+    .insight-copy strong { display:block; font-size: 11px; font-weight: 700; }
+    .insight-copy span { display:block; color:var(--muted); font-size:10px; margin-top:3px; line-height:1.35; }
+    .insight-value { font: 11px 'DM Mono', monospace; color: var(--mint); }
+    .metric-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+    .metric { padding: 15px; min-height: 105px; }
+    .metric-label { color: var(--muted); font-size: 10px; }
+    .metric-value { font: 500 24px 'DM Mono', monospace; letter-spacing: -.06em; margin: 11px 0 5px; }
+    .metric-foot { color: var(--muted-2); font: 10px 'DM Mono', monospace; }
+    .metric-foot b { font-weight: 500; }
+    .metric-accent { border-top: 2px solid var(--lime); }
+    .metric-accent .metric-value { color: var(--lime); }
+    .data-note { margin-top: 13px; display:flex; justify-content:space-between; align-items:center; color: var(--muted); font-size:10px; }
+    .data-note a { color: var(--lime); cursor:pointer; }
+  </style>
+  <style>
+    body.light { --ink:#f4f8f5; --ink-2:#eaf1ed; --panel:#ffffff; --panel-2:#eef5f1; --line:rgba(16,45,35,.12); --line-strong:rgba(16,45,35,.22); --text:#14211b; --muted:#62736b; --muted-2:#8b9a93; --shadow:0 18px 60px rgba(34,71,51,.1); background:var(--ink); }
+    body.light .sidebar { background:#edf4ef; } body.light .main { background:radial-gradient(circle at 76% 0%,rgba(99,168,117,.10),transparent 32%),var(--ink); }
+    body.light .topbar { background:rgba(244,248,245,.88); } body.light .command input, body.light .select-wrap select, body.light .input-wrap, body.light .table-search { background:#f1f7f3; }
+    body.light .sticky-col { background:#f1f8f3; } body.light tbody tr:hover td.sticky-col { background:#eaf5ed; } body.light th { background:#f5faf7; }
+    body.light .detail-drawer { background:#f8fcf9; } body.light .columns-popover { background:#f8fcf9; }
+  </style>
+  <script>
+    const stocks = [
+      { company:'Tata Consultancy Services', symbol:'TCS', sector:'IT Services', cap:'Large Cap', price:3_972.40, change:1.42, marketCap:'₹14.4L Cr', pe:30.8, forwardPe:28.4, book:357.2, pb:11.1, eps:128.9, roe:51.2, roce:64.8, div:1.34, debt:0.08, revenueGrowth:10.4, profitGrowth:8.1, margin:26.2, netMargin:19.8, promoter:71.7, fii:12.6, dii:9.8, high52:4_592, low52:3_056, beta:.62, pledged:0, institution:22.4, logo:'T', color:'#8ed8bf', tags:['Cash rich','High ROE'], period:'TTM' },
+      { company:'HDFC Bank', symbol:'HDFCBANK', sector:'Private Bank', cap:'Large Cap', price:1_786.25, change:1.86, marketCap:'₹13.6L Cr', pe:19.4, forwardPe:17.6, book:552.7, pb:3.23, eps:92.1, roe:16.8, roce:8.9, div:1.02, debt:0.14, revenueGrowth:15.6, profitGrowth:11.8, margin:0, netMargin:18.4, promoter:25.5, fii:47.1, dii:23.7, high52:1_880, low52:1_363, beta:.88, pledged:0, institution:70.8, logo:'H', color:'#89b9f7', tags:['Banking leader','Re-rating'], period:'FY25' },
+      { company:'Reliance Industries', symbol:'RELIANCE', sector:'Diversified', cap:'Large Cap', price:2_934.80, change:.68, marketCap:'₹19.9L Cr', pe:27.6, forwardPe:24.1, book:1_182.6, pb:2.48, eps:106.3, roe:9.8, roce:10.4, div:.32, debt:.42, revenueGrowth:9.2, profitGrowth:4.8, margin:17.6, netMargin:8.7, promoter:50.3, fii:19.8, dii:15.6, high52:3_218, low52:2_221, beta:.74, pledged:0, institution:35.4, logo:'R', color:'#f6c868', tags:['New energy','Platform'], period:'TTM' },
+      { company:'Infosys', symbol:'INFY', sector:'IT Services', cap:'Large Cap', price:1_684.55, change:-.34, marketCap:'₹6.9L Cr', pe:25.7, forwardPe:23.2, book:191.3, pb:8.8, eps:65.6, roe:32.4, roce:39.1, div:2.88, debt:0.05, revenueGrowth:6.9, profitGrowth:9.9, margin:25.2, netMargin:18.7, promoter:14.6, fii:34.8, dii:37.3, high52:1_975, low52:1_359, beta:.72, pledged:0, institution:72.1, logo:'I', color:'#b2a7ff', tags:['Dividend grower','AI pivot'], period:'TTM' },
+      { company:'ITC', symbol:'ITC', sector:'FMCG / Tobacco', cap:'Large Cap', price:414.65, change:.91, marketCap:'₹5.1L Cr', pe:25.1, forwardPe:23.9, book:57.1, pb:7.26, eps:16.5, roe:27.8, roce:35.5, div:3.34, debt:0.01, revenueGrowth:7.8, profitGrowth:3.6, margin:34.6, netMargin:25.8, promoter:0, fii:43.4, dii:42.7, high52:499, low52:371, beta:.49, pledged:0, institution:86.1, logo:'IT', color:'#e7a8a4', tags:['Cash machine','Dividend'], period:'FY25' },
+      { company:'Divi’s Laboratories', symbol:'DIVISLAB', sector:'Pharma', cap:'Large Cap', price:5_994.10, change:2.17, marketCap:'₹1.6L Cr', pe:67.4, forwardPe:51.8, book:1_085.8, pb:5.52, eps:88.9, roe:9.2, roce:12.8, div:.58, debt:0, revenueGrowth:18.2, profitGrowth:32.1, margin:39.3, netMargin:29.1, promoter:51.9, fii:17.7, dii:11.3, high52:6_413, low52:3_330, beta:.63, pledged:0, institution:29, logo:'D', color:'#ff9fa0', tags:['Earnings inflection','Export'], period:'TTM' },
+      { company:'Larsen & Toubro', symbol:'LT', sector:'Engineering', cap:'Large Cap', price:3_782.70, change:1.58, marketCap:'₹5.2L Cr', pe:31.2, forwardPe:26.5, book:840.5, pb:4.50, eps:121.2, roe:14.9, roce:18.1, div:.72, debt:.61, revenueGrowth:18.8, profitGrowth:14.2, margin:12.7, netMargin:8.3, promoter:0, fii:23.8, dii:31.4, high52:3_963, low52:2_541, beta:1.06, pledged:0, institution:55.2, logo:'L', color:'#d4c09a', tags:['Order book','Capex'], period:'FY25' },
+      { company:'Pidilite Industries', symbol:'PIDILITIND', sector:'Specialty Chemicals', cap:'Large Cap', price:3_124.35, change:-.68, marketCap:'₹1.6L Cr', pe:82.5, forwardPe:70.4, book:161.5, pb:19.3, eps:37.9, roe:25.8, roce:32.9, div:.52, debt:.04, revenueGrowth:11.4, profitGrowth:16.8, margin:26.1, netMargin:17.4, promoter:69.9, fii:12.2, dii:13.8, high52:3_414, low52:2_160, beta:.57, pledged:0, institution:26, logo:'P', color:'#d9b5ff', tags:['Pricing power','Premium'], period:'TTM' },
+      { company:'HCL Technologies', symbol:'HCLTECH', sector:'IT Services', cap:'Large Cap', price:1_624.90, change:1.12, marketCap:'₹4.4L Cr', pe:25.1, forwardPe:22.7, book:283.6, pb:5.73, eps:64.7, roe:24.6, roce:30.2, div:3.04, debt:.08, revenueGrowth:7.1, profitGrowth:10.9, margin:20.1, netMargin:14.6, promoter:60.7, fii:20.9, dii:12.7, high52:1_760, low52:1_235, beta:.73, pledged:0, institution:33.6, logo:'H', color:'#f09cbf', tags:['Deal wins','Yield'], period:'TTM' },
+      { company:'Bajaj Finance', symbol:'BAJFINANCE', sector:'NBFC', cap:'Large Cap', price:1_108.20, change:2.88, marketCap:'₹6.8L Cr', pe:28.8, forwardPe:23.9, book:514.7, pb:2.15, eps:38.5, roe:18.9, roce:10.8, div:.27, debt:3.62, revenueGrowth:27.2, profitGrowth:21.4, margin:0, netMargin:23.2, promoter:54.7, fii:19.1, dii:13.8, high52:1_620, low52:618, beta:1.18, pledged:0, institution:32.9, logo:'B', color:'#95c5fe', tags:['Consumer credit','Growth'], period:'FY25' }
+    ];
+    const indices = [
+      ['NIFTY 50','25,486.65','+186.20','+0.74%','up'], ['NIFTY NEXT 50','68,112.40','+342.60','+0.51%','up'], ['SENSEX','83,512.65','+541.72','+0.65%','up'], ['NIFTY BANK','56,982.10','+1,026.45','+1.83%','up'], ['NIFTY IT','41,224.80','-112.35','-0.27%','down'], ['NIFTY PHARMA','22,108.35','+118.60','+0.54%','up'], ['NIFTY AUTO','26,044.15','+216.90','+0.84%','up'], ['NIFTY FMCG','58,892.20','+179.10','+0.31%','up'], ['NIFTY METAL','9,684.55','-43.75','-0.45%','down'], ['NIFTY PSU BANK','7,202.15','+87.05','+1.22%','up'], ['NIFTY PRIVATE BANK','27,744.05','+482.95','+1.77%','up']
+    ];
+    let filteredStocks = [...stocks];
+    let sortState = { key:null, dir:1 };
+    let watchlist = new Set(['TCS','INFY','HDFCBANK','ITC','RELIANCE','LT','HCLTECH','BAJFINANCE']);
+    const money = n => n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const sign = n => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+    const el = id => document.getElementById(id);
+    const showToast = msg => { const t=el('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),2200); };
+
+    function renderIndices() {
+      el('marketStrip').innerHTML = indices.map(([name,value,change,pct,kind]) => `<article class="index-card"><div class="index-name">${name}</div><div class="index-value">${value}</div><div class="index-row"><span class="${kind}">${change}</span><span class="${kind}">${pct}</span></div><div class="market-sub">Day range · indicative</div></article>`).join('');
+    }
+    function rowMarkup(s) {
+      const logo = `<span class="company-logo" style="background:${s.color}">${s.logo}</span>`;
+      return `<tr data-symbol="${s.symbol}"><td class="sticky-col"><div class="company-cell">${logo}<div><span class="company-name">${s.company}</span><span class="company-symbol">${s.symbol} · ${s.sector}</span></div></div></td><td class="price-cell">₹${money(s.price)}</td><td class="${s.change>=0?'positive':'negative'}">${sign(s.change)}</td><td>${s.marketCap}</td><td class="${s.pe<30?'good':'soft'}">${s.pe.toFixed(1)}x</td><td class="${s.roe>=18?'good':'soft'}">${s.roe.toFixed(1)}%</td><td>${s.roce.toFixed(1)}%</td><td class="${s.div>=1?'good':'soft'}">${s.div.toFixed(2)}%</td><td class="${s.debt<=.5?'good':'soft'}">${s.debt.toFixed(2)}x</td><td class="${s.profitGrowth>=10?'good':'soft'}">${s.profitGrowth.toFixed(1)}%</td><td>${s.promoter.toFixed(1)}%</td><td>${s.fii.toFixed(1)}%</td><td><span class="period-badge">${s.period}</span></td><td><div class="row-actions"><button class="row-action ${watchlist.has(s.symbol)?'starred':''}" data-action="watch" title="Add to watchlist">${watchlist.has(s.symbol)?'★':'☆'}</button><button class="row-action" data-action="detail" title="Open analysis">↗</button></div></td></tr>`;
+    }
+    function renderStocks(list=filteredStocks) {
+      const q = el('tableSearch').value.trim().toLowerCase();
+      const visible = list.filter(s => !q || `${s.company} ${s.symbol} ${s.sector}`.toLowerCase().includes(q));
+      el('stockRows').innerHTML = visible.map(rowMarkup).join('') || `<tr><td colspan="14" style="text-align:center;padding:32px;color:var(--muted)">No companies match this screen. Try loosening one filter.</td></tr>`;
+      el('resultCount').textContent = `${visible.length} match${visible.length===1?'':'es'}`;
+      el('tableFootText').textContent = `Showing ${visible.length} of 2,184 listed companies`;
+      document.querySelectorAll('#stockRows tr').forEach(row => { row.addEventListener('dblclick',()=>openDetail(row.dataset.symbol)); row.querySelector('[data-action="detail"]')?.addEventListener('click',()=>openDetail(row.dataset.symbol)); row.querySelector('[data-action="watch"]')?.addEventListener('click',e=>toggleWatch(row.dataset.symbol,e.currentTarget)); });
+      applyColumnVisibility();
+    }
+    function readFilters() {
+      return { cap:el('capFilter').value, pe:parseFloat(el('peFilter').value), roe:parseFloat(el('roeFilter').value), growth:parseFloat(el('growthFilter').value), debt:parseFloat(el('debtFilter').value), dividend:parseFloat(el('dividendFilter').value), pledge:el('pledgeFilter').checked, institution:el('institutionFilter').checked };
+    }
+    function applyFilters() {
+      const f=readFilters();
+      filteredStocks=stocks.filter(s => (!f.cap || s.cap===f.cap) && (!Number.isFinite(f.pe)||s.pe<=f.pe) && (!Number.isFinite(f.roe)||s.roe>=f.roe) && (!Number.isFinite(f.growth)||s.profitGrowth>=f.growth) && (!Number.isFinite(f.debt)||s.debt<=f.debt) && (!Number.isFinite(f.dividend)||s.div>=f.dividend) && (!f.pledge||s.pledged===0) && (!f.institution||s.institution>20));
+      const count=Object.values(f).filter(v=>v!==''&&v!==false&&!Number.isNaN(v)).length; el('filterCount').textContent=`${String(count).padStart(2,'0')} filter${count===1?'':'s'}`;
+      const chips=[]; if(f.cap) chips.push(f.cap); if(Number.isFinite(f.pe)) chips.push(`P/E ≤ ${f.pe}`); if(Number.isFinite(f.roe)) chips.push(`ROE ≥ ${f.roe}%`); if(Number.isFinite(f.growth)) chips.push(`Profit growth ≥ ${f.growth}%`); if(Number.isFinite(f.debt)) chips.push(`D/E ≤ ${f.debt}`); if(Number.isFinite(f.dividend)) chips.push(`Yield ≥ ${f.dividend}%`); if(f.pledge) chips.push('No pledge'); if(f.institution) chips.push('Institutions > 20%');
+      el('activeFilters').innerHTML = `<span class="active-label">Active:</span>${chips.length?chips.map(c=>`<span class="filter-chip">${c} <b>×</b></span>`).join(''):'<span class="filter-chip">Quality universe <b>×</b></span>'}<span class="filter-chip">FY25 + TTM <b>×</b></span>`;
+      renderStocks(); showToast(`${filteredStocks.length} companies match your screen`);
+    }
+    function resetFilters() { ['capFilter','peFilter','roeFilter','growthFilter','debtFilter','dividendFilter'].forEach(id=>el(id).value=''); ['pledgeFilter','institutionFilter'].forEach(id=>el(id).checked=false); filteredStocks=[...stocks]; el('filterCount').textContent='00 filters'; el('activeFilters').innerHTML='<span class="active-label">Active:</span><span class="filter-chip">Quality universe <b>×</b></span><span class="filter-chip">FY25 + TTM <b>×</b></span>'; renderStocks(); showToast('Screen reset to the full universe'); }
+    function toggleWatch(symbol,button) { if(watchlist.has(symbol)){watchlist.delete(symbol);button.classList.remove('starred');button.textContent='☆';showToast(`${symbol} removed from watchlist`);} else {watchlist.add(symbol);button.classList.add('starred');button.textContent='★';showToast(`${symbol} added to watchlist`);} el('watchCount').textContent=String(watchlist.size).padStart(2,'0'); el('metricWatch').textContent=String(watchlist.size).padStart(2,'0'); }
+    function renderChart(points=[44,49,45,53,50,58,62,56,64,68,65,73,70,78,83,80,88,92,89,96,93,101,98,108,104,111,118,114,122,127,125,135,132,141,145]) {
+      const w=900,h=210,pad=8,min=Math.min(...points)-7,max=Math.max(...points)+7; const pts=points.map((v,i)=>`${(i/(points.length-1))*w},${h-pad-((v-min)/(max-min))*(h-pad*2)}`); const line=`M ${pts.join(' L ')}`; const area=`${line} L ${w},${h} L 0,${h} Z`; el('chartLine').setAttribute('d',line); el('chartArea').setAttribute('d',area); el('chartGrid').innerHTML=[28,78,128,178].map(y=>`<line class="chart-grid" x1="0" x2="900" y1="${y}" y2="${y}"/>`).join('');
+    }
+    const chartSeries={ 'NIFTY 50':{value:'25,486.65',change:'+186.20 · +0.74%',points:[44,49,45,53,50,58,62,56,64,68,65,73,70,78,83,80,88,92,89,96,93,101,98,108,104,111,118,114,122,127,125,135,132,141,145]}, 'SENSEX':{value:'83,512.65',change:'+541.72 · +0.65%',points:[42,48,44,57,55,61,59,64,62,72,68,75,78,76,84,89,87,94,91,101,105,102,114,119,117,126,122,131,135,144,139,151,157,155,166]}, 'NIFTY BANK':{value:'56,982.10',change:'+1,026.45 · +1.83%',points:[41,50,47,59,55,66,61,69,74,72,84,82,93,88,100,108,103,114,111,121,127,124,137,142,139,150,157,153,166,173,169,183,179,191,199]}, 'NIFTY IT':{value:'41,224.80',change:'-112.35 · -0.27%',points:[148,145,151,144,149,143,137,141,135,138,131,135,128,130,124,128,122,125,119,121,115,118,112,116,110,114,108,112,105,108,102,104,99,101,96]} };
+    function updateChart(){ const s=chartSeries[el('chartIndex').value]; el('chartValue').textContent=s.value; el('chartChange').textContent=s.change; el('chartChange').className=s.change[0]==='-'?'down':'up'; renderChart(s.points); }
+    function openDetail(symbol) { const s=stocks.find(x=>x.symbol===symbol); if(!s)return; const detailChart=[42,47,45,56,54,62,60,69,66,74,71,82,77,89,85,93,91,103,97,108,105,116,111,120]; el('drawerContent').innerHTML=`<div class="detail-kicker">Stock intelligence / ${s.sector}</div><div class="detail-title"><span class="company-logo" style="background:${s.color}">${s.logo}</span><div><h2>${s.company}</h2><p>${s.symbol} · ${s.cap} · NSE / BSE</p></div></div><div class="detail-price"><strong>₹${money(s.price)}</strong><span class="${s.change>=0?'positive':'negative'}">${sign(s.change)} today</span></div><div class="detail-grid"><div class="detail-metric"><span>Market cap</span><b>${s.marketCap}</b></div><div class="detail-metric"><span>P / E</span><b>${s.pe.toFixed(1)}x</b></div><div class="detail-metric"><span>ROE</span><b class="good">${s.roe.toFixed(1)}%</b></div><div class="detail-metric"><span>ROCE</span><b>${s.roce.toFixed(1)}%</b></div><div class="detail-metric"><span>Dividend yield</span><b>${s.div.toFixed(2)}%</b></div><div class="detail-metric"><span>Debt / equity</span><b>${s.debt.toFixed(2)}x</b></div></div><div class="detail-block"><div class="detail-block-head"><h3>Price context</h3><small>1 year · indicative</small></div><svg class="mini-chart" viewBox="0 0 500 80" preserveAspectRatio="none"><path d="M 0,66 L 22,61 L 44,64 L 66,54 L 88,57 L 110,49 L 132,51 L 154,42 L 176,45 L 198,36 L 220,40 L 242,31 L 264,34 L 286,25 L 308,29 L 330,18 L 352,22 L 374,15 L 396,19 L 418,10 L 440,13 L 462,6 L 500,9" fill="none" stroke="var(--lime)" stroke-width="2"/><path d="M 0,66 L 22,61 L 44,64 L 66,54 L 88,57 L 110,49 L 132,51 L 154,42 L 176,45 L 198,36 L 220,40 L 242,31 L 264,34 L 286,25 L 308,29 L 330,18 L 352,22 L 374,15 L 396,19 L 418,10 L 440,13 L 462,6 L 500,9 L 500,80 L 0,80 Z" fill="url(#areaFill)"/></svg><div class="chart-axis"><span>Sep ’25</span><span>Today</span></div></div><div class="detail-block"><div class="detail-block-head"><h3>Thesis snapshot</h3><small>FY25 + TTM</small></div><div class="detail-tags">${s.tags.map(t=>`<span class="detail-tag">${t}</span>`).join('')}</div><p style="color:var(--muted);font-size:11px;line-height:1.55;margin-bottom:0">${s.company} screens at <b style="color:var(--text)">${s.roe.toFixed(1)}% ROE</b> with <b style="color:var(--text)">${s.profitGrowth.toFixed(1)}% profit growth</b>. Ownership is ${s.institution.toFixed(1)}% institutional; promoter pledge is ${s.pledged===0?'nil':'present'}.</p></div><div class="data-note"><span>Source: demo dataset · Last updated 09:41 IST</span><a>Open full analysis →</a></div>`; el('detailBackdrop').classList.add('open'); }
+    function applyColumnVisibility(){ const checks=[...document.querySelectorAll('#columnsPopover input')]; const hidden=new Set(checks.filter(c=>!c.checked).map(c=>c.dataset.col)); const groups={price:[1,2],valuation:[3,4],quality:[5,6,7,8,9],ownership:[10,11]}; document.querySelectorAll('table tr').forEach(row=>{ Object.entries(groups).forEach(([group,idxs])=>idxs.forEach(i=>{if(row.cells[i])row.cells[i].style.display=hidden.has(group)?'none':'';})); }); }
+    function sortTable(index,key){ if(sortState.key===key)sortState.dir*=-1; else {sortState.key=key;sortState.dir=1;} filteredStocks.sort((a,b)=>(a[key]>b[key]?1:-1)*sortState.dir); renderStocks(); }
+    function exportCSV(){ const headers=['Company','Symbol','Sector','Price','Change %','Market Cap','P/E','ROE','ROCE','Dividend Yield','Debt/Equity','Profit Growth','Promoter Holding','FII Holding','Period']; const rows=filteredStocks.map(s=>[s.company,s.symbol,s.sector,s.price,s.change,s.marketCap,s.pe,s.roe,s.roce,s.div,s.debt,s.profitGrowth,s.promoter,s.fii,s.period]); const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='rk-analysis-screen.csv'; a.click(); URL.revokeObjectURL(a.href); showToast('CSV export downloaded'); }
+    function init(){
+      renderIndices(); renderChart(); renderStocks(); el('watchCount').textContent=String(watchlist.size).padStart(2,'0'); el('metricWatch').textContent=String(watchlist.size).padStart(2,'0');
+      el('applyFilters').addEventListener('click',applyFilters); el('resetFilters').addEventListener('click',resetFilters); el('tableSearch').addEventListener('input',()=>renderStocks()); el('globalSearch').addEventListener('input',e=>{ if(e.target.value.trim()) { el('tableSearch').value=e.target.value; renderStocks(); el('screenerSection').scrollIntoView({behavior:'smooth',block:'start'}); } });
+      el('exportButton').addEventListener('click',exportCSV); el('columnsButton').addEventListener('click',()=>el('columnsPopover').classList.toggle('open')); document.querySelectorAll('#columnsPopover input').forEach(c=>c.addEventListener('change',applyColumnVisibility));
+      el('chartIndex').addEventListener('change',updateChart); document.querySelectorAll('#chartTabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#chartTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');showToast(`${b.textContent} chart range selected`);}));
+      el('closeDrawer').addEventListener('click',()=>el('detailBackdrop').classList.remove('open')); el('detailBackdrop').addEventListener('click',e=>{if(e.target===el('detailBackdrop'))el('detailBackdrop').classList.remove('open');});
+      document.querySelectorAll('.nav button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const view=btn.dataset.view;el('crumbView').textContent=view;if(view==='Screener')el('screenerSection').scrollIntoView({behavior:'smooth',block:'start'});else showToast(`${view} workspace selected`);}));
+      document.querySelectorAll('th .sort').forEach((s,i)=>s.addEventListener('click',()=>{const map={0:'company',1:'price',2:'change',4:'pe',5:'roe'};sortTable(i,map[i]||'price');}));
+      document.querySelectorAll('.recipe').forEach(r=>r.addEventListener('click',()=>{document.querySelectorAll('.recipe').forEach(x=>x.classList.remove('active'));r.classList.add('active');showToast(`${r.querySelector('b').textContent} screen loaded`);}));
+      el('saveScreen').addEventListener('click',()=>showToast('Screen saved to your workspace')); el('themeButton').addEventListener('click',()=>{document.body.classList.toggle('light');showToast(document.body.classList.contains('light')?'Light mode enabled':'Dark mode enabled');}); el('viewIndexDetails').addEventListener('click',()=>showToast('Index detail view is available in the research workspace'));
+      document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();el('globalSearch').focus();} if(e.key==='Escape'){el('detailBackdrop').classList.remove('open');el('columnsPopover').classList.remove('open');}});
+    }
+    setTimeout(init, 0);
+  </script>
+</body>
+</html>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">RK</div><div><div class="brand-name">RK ANALYSIS</div><div class="brand-meta">INDIAN EQUITY INTELLIGENCE</div></div></div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="active" data-view="Dashboard"><span class="nav-icon">⌂</span><span class="nav-copy">Dashboard</span></button>
+        <button data-view="Stocks"><span class="nav-icon">◫</span><span class="nav-copy">Stocks</span></button>
+        <button data-view="Screener"><span class="nav-icon">⌕</span><span class="nav-copy">Screener</span><span class="nav-count">2,184</span></button>
+        <button data-view="Watchlist"><span class="nav-icon">☆</span><span class="nav-copy">Watchlist</span><span class="nav-count" id="watchCount">08</span></button>
+        <button data-view="Compare"><span class="nav-icon">⇄</span><span class="nav-copy">Compare</span></button>
+        <button data-view="Sector Analysis"><span class="nav-icon">◒</span><span class="nav-copy">Sector Analysis</span></button>
+      </nav>
+      <div class="nav-label" style="margin-top:24px">Research</div>
+      <nav class="nav">
+        <button data-view="Financials"><span class="nav-icon">▤</span><span class="nav-copy">Financials</span></button>
+        <button data-view="Dividends"><span class="nav-icon">◌</span><span class="nav-copy">Dividends</span></button>
+        <button data-view="Banking"><span class="nav-icon">⌑</span><span class="nav-copy">Banking</span></button>
+        <button data-view="AI Analysis"><span class="nav-icon">✦</span><span class="nav-copy">AI Analysis</span><span class="nav-count">BETA</span></button>
+      </nav>
+      <div class="nav-label" style="margin-top:24px">Account</div>
+      <nav class="nav"><button data-view="Portfolio"><span class="nav-icon">▥</span><span class="nav-copy">Portfolio</span></button><button data-view="Settings"><span class="nav-icon">⚙</span><span class="nav-copy">Settings</span></button></nav>
+      <div class="sidebar-foot">
+        <div class="feed-card">
+          <div class="feed-card-head"><span class="feed-title">Data pipeline</span><span class="live-dot">ONLINE</span></div>
+          <div class="feed-row"><span>Market feed</span><strong>NSE / BSE</strong></div>
+          <div class="feed-row"><span>Financials</span><strong>FY25 + TTM</strong></div>
+          <div class="feed-row"><span>Mode</span><strong style="color:var(--amber)">Demo data</strong></div>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb"><b>Workspace</b><span> / </span><span id="crumbView">Dashboard</span></div>
+        <div class="command"><span class="command-icon">⌕</span><input id="globalSearch" placeholder="Search a company, symbol or metric" /><span class="command-key">⌘ K</span></div>
+        <div class="top-actions"><button class="icon-button" id="themeButton" aria-label="Toggle theme">◐</button><button class="icon-button" aria-label="Notifications">♧</button><div class="avatar">RK</div></div>
+      </header>
+      <div class="content">
+        <section class="hero">
+          <div><div class="eyebrow">Market pulse / <span id="todayLabel">Tuesday, 22 Sep 2026</span></div><h1>Know what moves<br><span style="color:var(--lime)">before it moves.</span></h1><p class="hero-copy">A sharper view of Indian equities — from market structure to durable business quality. Screen, compare, and build conviction without the noise.</p></div>
+          <div class="hero-right"><span class="status-pill">MARKET OPEN</span><span class="source-pill">Last Updated · 09:41 IST</span></div>
+        </section>
+
+        <section aria-labelledby="marketTitle">
+          <div class="market-head"><div><div class="section-title" id="marketTitle">Market overview</div><div class="section-meta">Broad indices · intraday movement</div></div><span class="source-pill">NSE / BSE · 1 min delayed</span></div>
+          <div class="market-strip" id="marketStrip"></div>
+        </section>
+
+        <section class="overview-grid">
+          <div class="panel chart-card">
+            <div class="panel-head"><div><div class="head-left"><select class="index-select" id="chartIndex"><option>NIFTY 50</option><option>SENSEX</option><option>NIFTY BANK</option><option>NIFTY IT</option></select><span class="source-pill">NSE</span></div><div class="chart-stat"><strong id="chartValue">25,486.65</strong><span class="up" id="chartChange">+186.20 · +0.74%</span></div></div><div class="chart-tabs" id="chartTabs"><button class="active">1D</button><button>1W</button><button>1M</button><button>1Y</button></div></div>
+            <div class="chart-wrap"><svg viewBox="0 0 900 210" preserveAspectRatio="none" aria-label="Nifty 50 line chart"><defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9fa6c" stop-opacity=".22"/><stop offset="1" stop-color="#c9fa6c" stop-opacity="0"/></linearGradient></defs><g id="chartGrid"></g><path id="chartArea" class="chart-area"></path><path id="chartLine" class="chart-line"></path></svg></div>
+            <div class="chart-axis"><span>09:15</span><span>10:30</span><span>12:00</span><span>13:30</span><span>15:30</span></div>
+            <div class="data-note"><span>Source: NSE India · Market data is indicative</span><a id="viewIndexDetails">View index details →</a></div>
+          </div>
+          <div class="panel insights"><div class="panel-head"><div><div class="section-title">Signal watch</div><div class="section-meta">What is shaping today’s tape</div></div><span class="eyebrow">03 signals</span></div><div class="insight-list"><div class="insight"><div class="insight-icon">↗</div><div class="insight-copy"><strong>Financials lead breadth</strong><span>Private banks hold 4 of top 10 momentum slots</span></div><span class="insight-value">+1.9%</span></div><div class="insight"><div class="insight-icon">↗</div><div class="insight-copy"><strong>Quality at a discount</strong><span>17 names pass ROE &gt; 18% / P-E &lt; 28</span></div><span class="insight-value">17</span></div><div class="insight"><div class="insight-icon">!</div><div class="insight-copy"><strong>Watch the rupee</strong><span>IT exporters face near-term margin pressure</span></div><span class="insight-value" style="color:var(--amber)">₹83.92</span></div></div></div>
+        </section>
+
+        <section class="metric-grid" aria-label="Research metrics"><div class="panel metric metric-accent"><div class="metric-label">Screened universe</div><div class="metric-value">2,184</div><div class="metric-foot"><b class="up">+32</b> vs last refresh</div></div><div class="panel metric"><div class="metric-label">Quality shortlist</div><div class="metric-value">42</div><div class="metric-foot"><b class="up">+8.4%</b> this month</div></div><div class="panel metric"><div class="metric-label">My watchlist</div><div class="metric-value" id="metricWatch">08</div><div class="metric-foot"><b style="color:var(--lime)">3</b> earnings this week</div></div><div class="panel metric"><div class="metric-label">Data coverage</div><div class="metric-value">96.8%</div><div class="metric-foot"><b class="up">Healthy</b> · 18 feeds</div></div></section>
+        
+        <div id="toast" role="status"></div>
+
+        <section class="screener-section" id="screenerSection">
+          <div class="section-header-row"><div><div class="eyebrow">Research canvas / 01</div><div class="section-title big">Find your next compounder</div><div class="section-meta">Stack quality, valuation, growth, and ownership filters. Results update as you refine the thesis.</div></div><div class="section-actions"><button class="outline-button" id="resetFilters">Reset</button><button class="lime-button" id="applyFilters">Run screen <span>↗</span></button></div></div>
+          <div class="screener-layout">
+            <aside class="panel filters-panel">
+              <div class="filter-top"><div class="filter-title">Build a screen</div><span class="eyebrow" id="filterCount">00 filters</span></div>
+              <div class="saved-screen"><span>Saved screens</span><button id="saveScreen">+ Save current</button></div>
+              <div class="filter-group"><label>Market cap</label><div class="select-wrap"><select id="capFilter"><option value="">All market caps</option><option value="Large Cap">Large Cap</option><option value="Mid Cap">Mid Cap</option><option value="Small Cap">Small Cap</option><option value="Micro Cap">Micro Cap</option></select></div></div>
+              <div class="filter-group"><label>Valuation <span>P/E</span></label><div class="range-row"><div class="input-wrap"><span>≤</span><input id="peFilter" type="number" placeholder="25" min="0" /></div><div class="input-unit">P/E</div></div></div>
+              <div class="filter-group"><label>Profitability <span>ROE</span></label><div class="range-row"><div class="input-wrap"><span>≥</span><input id="roeFilter" type="number" placeholder="15" min="0" /></div><div class="input-unit">%</div></div></div>
+              <div class="filter-group"><label>Growth <span>Profit growth</span></label><div class="range-row"><div class="input-wrap"><span>≥</span><input id="growthFilter" type="number" placeholder="10" min="0" /></div><div class="input-unit">%</div></div></div>
+              <div class="filter-group"><label>Financial strength <span>Debt / equity</span></label><div class="range-row"><div class="input-wrap"><span>≤</span><input id="debtFilter" type="number" placeholder="0.50" min="0" step=".1" /></div><div class="input-unit">x</div></div></div>
+              <div class="filter-group"><label>Dividend yield <span>Annual</span></label><div class="range-row"><div class="input-wrap"><span>≥</span><input id="dividendFilter" type="number" placeholder="1" min="0" step=".1" /></div><div class="input-unit">%</div></div></div>
+              <div class="filter-group"><label>Ownership quality</label><div class="check-row"><label class="check"><input id="pledgeFilter" type="checkbox" /><span></span> No promoter pledge</label><label class="check"><input id="institutionFilter" type="checkbox" /><span></span> FII + DII &gt; 20%</label></div></div>
+              <div class="filter-foot"><span>Every filter is combined with <b>AND</b></span><span class="help">?</span></div>
+            </aside>
+            <div class="results-panel">
+              <div class="panel results-toolbar"><div class="result-summary"><span class="result-dot"></span><strong id="resultCount">8 matches</strong><span>across NSE + BSE</span></div><div class="toolbar-actions"><div class="table-search"><span>⌕</span><input id="tableSearch" placeholder="Search results" /></div><button class="table-button" id="columnsButton">☷ Columns</button><button class="table-button" id="exportButton">↓ Export CSV</button></div></div>
+              <div class="active-filters" id="activeFilters"><span class="active-label">Active:</span><span class="filter-chip">Quality universe <b>×</b></span><span class="filter-chip">FY25 + TTM <b>×</b></span></div>
+              <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th class="sticky-col">Company <span class="sort">↕</span></th><th>Price <span class="sort">↕</span></th><th>Chg % <span class="sort">↕</span></th><th>Market cap</th><th>P/E <span class="sort">↕</span></th><th>ROE <span class="sort">↕</span></th><th>ROCE</th><th>Div yield</th><th>Debt / Eq</th><th>Profit growth</th><th>Promoter</th><th>FII</th><th>Period</th><th class="end-col">Actions</th></tr></thead><tbody id="stockRows"></tbody></table></div><div class="table-foot"><span id="tableFootText">Showing 8 of 2,184 listed companies</span><span class="foot-note">Financials: FY25 / TTM · <span class="up">●</span> Live market data</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="bottom-grid">
+          <div class="panel recipes-panel"><div class="panel-head"><div><div class="section-title">Research recipes</div><div class="section-meta">Start with a point of view</div></div><a class="link-button">View library →</a></div><div class="recipe-grid"><button class="recipe active"><span class="recipe-icon">⌁</span><span><b>Quality compounders</b><small>ROE &gt; 18% · D/E &lt; 0.5</small></span><em>42</em></button><button class="recipe"><span class="recipe-icon">◒</span><span><b>Dividend growers</b><small>Yield &gt; 1.5% · 5Y CAGR</small></span><em>68</em></button><button class="recipe"><span class="recipe-icon">↗</span><span><b>Growth at fair value</b><small>Profit CAGR &gt; 20% · PEG &lt; 1.5</small></span><em>31</em></button></div></div>
+          <div class="panel sources-panel"><div class="panel-head"><div><div class="section-title">Data integrity</div><div class="section-meta">Know what you are looking at</div></div><span class="source-pill">Demo mode</span></div><div class="source-list"><div><span><i class="source-dot live"></i> Market data</span><b>NSE / BSE</b><small>1 min delayed</small></div><div><span><i class="source-dot"></i> Financial statements</span><b>Provider ready</b><small>FY25 · TTM</small></div><div><span><i class="source-dot"></i> Shareholding</span><b>Exchange filings</b><small>Quarterly</small></div></div><div class="source-disclaimer">Demo values are illustrative. Connect licensed APIs to activate production feeds.</div></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="detailBackdrop"><div class="detail-drawer" id="detailDrawer"><button class="close-button" id="closeDrawer">×</button><div id="drawerContent"></div></div></div>
+  <div class="columns-popover" id="columnsPopover"><div class="popover-title">Visible columns</div><label><input type="checkbox" checked data-col="price" /> Price</label><label><input type="checkbox" checked data-col="valuation" /> Valuation</label><label><input type="checkbox" checked data-col="quality" /> Quality</label><label><input type="checkbox" checked data-col="ownership" /> Ownership</label></div>
+
+  <style>
+    .screener-section { margin-top: 42px; scroll-margin-top: 90px; }
+    .section-header-row { display:flex; justify-content:space-between; align-items:end; gap: 20px; margin-bottom: 17px; }
+    .section-title.big { font-size: 21px; margin-top: 5px; letter-spacing: -.035em; }
+    .section-header-row .section-meta { margin-top:5px; }
+    .section-actions { display:flex; gap:8px; }
+    .outline-button, .lime-button { border-radius: 8px; padding: 9px 13px; font-size: 11px; font-weight: 700; }
+    .outline-button { border:1px solid var(--line); color:var(--muted); background:transparent; }
+    .outline-button:hover { color:var(--text); border-color: var(--line-strong); }
+    .lime-button { border: 1px solid var(--lime); color:var(--ink); background:var(--lime); }
+    .lime-button:hover { background:#d9ff94; }
+    .lime-button span { margin-left: 5px; font-size: 14px; }
+    .screener-layout { display:grid; grid-template-columns: 250px minmax(0,1fr); gap: 13px; align-items:start; }
+    .filters-panel { padding: 16px; }
+    .filter-top { display:flex; justify-content:space-between; align-items:center; padding-bottom: 15px; border-bottom:1px solid var(--line); }
+    .filter-title { font-size:13px; font-weight:700; }
+    .saved-screen { display:flex; align-items:center; justify-content:space-between; font-size:10px; color:var(--muted); padding: 13px 0 3px; }
+    .saved-screen button, .link-button { border:0; background:transparent; color:var(--lime); font: 10px 'DM Mono', monospace; padding:0; }
+    .filter-group { padding: 13px 0 0; }
+    .filter-group > label:first-child { display:flex; justify-content:space-between; color:#bdc9c5; font-size:10px; font-weight:700; margin-bottom:7px; }
+    .filter-group > label:first-child span { color:var(--muted-2); font: 9px 'DM Mono', monospace; }
+    .select-wrap { position:relative; }
+    .select-wrap::after { content:'⌄'; position:absolute; right:10px; top:7px; color:var(--muted); pointer-events:none; }
+    select { appearance:none; }
+    .select-wrap select, .input-wrap { width:100%; border:1px solid var(--line); border-radius:6px; background:#10181b; color:var(--text); padding:8px 10px; outline:0; font-size:11px; }
+    .select-wrap select:focus, .input-wrap:focus-within { border-color:rgba(201,250,108,.5); }
+    .range-row { display:flex; gap:6px; align-items:center; }
+    .input-wrap { display:flex; align-items:center; gap:7px; flex:1; }
+    .input-wrap span { color:var(--lime); font: 11px 'DM Mono', monospace; }
+    .input-wrap input { width:100%; border:0; outline:0; background:transparent; color:var(--text); font: 11px 'DM Mono', monospace; }
+    .input-wrap input::placeholder { color:#52615f; }
+    .input-unit { color:var(--muted-2); font: 10px 'DM Mono', monospace; min-width:19px; }
+    .check-row { display:grid; gap:7px; padding-top: 2px; }
+    .check { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:10px; cursor:pointer; }
+    .check input { display:none; }
+    .check span { width:13px; height:13px; border:1px solid var(--line-strong); border-radius:3px; display:grid; place-items:center; }
+    .check input:checked + span { background:var(--lime); border-color:var(--lime); }
+    .check input:checked + span::after { content:'✓'; color:var(--ink); font-size:9px; font-weight:800; }
+    .filter-foot { display:flex; justify-content:space-between; color:var(--muted-2); font:9px 'DM Mono', monospace; border-top:1px solid var(--line); padding-top:13px; margin-top:16px; }
+    .filter-foot b { color:var(--muted); font-weight:500; }
+    .help { border:1px solid var(--line-strong); border-radius:50%; width:15px; height:15px; display:grid; place-items:center; }
+    .results-panel { min-width:0; }
+    .results-toolbar { min-height:61px; padding: 11px 13px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .result-summary { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:10px; white-space:nowrap; }
+    .result-summary strong { color:var(--text); font-weight:700; }
+    .result-dot { width:6px; height:6px; border-radius:50%; background:var(--lime); box-shadow:0 0 0 3px rgba(201,250,108,.1); }
+    .toolbar-actions { display:flex; gap:6px; }
+    .table-search { display:flex; align-items:center; gap:7px; border:1px solid var(--line); border-radius:6px; padding:0 8px; color:var(--muted); width:154px; }
+    .table-search input { background:transparent; border:0; outline:0; padding:7px 0; color:var(--text); width:100%; font-size:10px; }
+    .table-button { border:1px solid var(--line); border-radius:6px; background:transparent; color:var(--muted); padding:7px 9px; font-size:10px; white-space:nowrap; }
+    .table-button:hover { color:var(--lime); border-color:rgba(201,250,108,.35); }
+    .active-filters { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding: 10px 1px; }
+    .active-label { color:var(--muted-2); font:9px 'DM Mono', monospace; }
+    .filter-chip { color:#b9d8a1; background:rgba(201,250,108,.08); border:1px solid rgba(201,250,108,.16); border-radius:999px; padding:4px 7px; font:9px 'DM Mono', monospace; }
+    .filter-chip b { color:var(--lime-dark); margin-left:4px; }
+    .table-panel { overflow:hidden; }
+    .table-scroll { overflow-x:auto; }
+    table { border-collapse:collapse; width:100%; min-width: 970px; font-size:10px; }
+    th { color:var(--muted-2); text-align:right; padding:11px 10px; border-bottom:1px solid var(--line); background:rgba(9,14,16,.4); white-space:nowrap; font:9px 'DM Mono', monospace; letter-spacing:.02em; }
+    th:first-child, td:first-child { text-align:left; }
+    th.sticky-col, td.sticky-col { position:sticky; left:0; z-index:1; background:#172125; }
+    th.sticky-col { z-index:2; }
+    td { color:#bac6c2; text-align:right; padding:11px 10px; border-bottom:1px solid rgba(218,240,235,.065); white-space:nowrap; font:10px 'DM Mono', monospace; }
+    tbody tr { transition:background .16s ease; }
+    tbody tr:hover { background:rgba(201,250,108,.045); }
+    tbody tr:hover td.sticky-col { background:#1b2a28; }
+    .company-cell { display:flex; align-items:center; gap:9px; min-width:165px; }
+    .company-logo { width:26px; height:26px; border-radius:7px; display:grid; place-items:center; font:700 10px Manrope,sans-serif; color:var(--ink); }
+    .company-name { color:var(--text); font-family:Manrope,sans-serif; font-size:10px; font-weight:700; text-align:left; }
+    .company-symbol { color:var(--muted-2); display:block; font:9px 'DM Mono', monospace; margin-top:2px; }
+    .price-cell { color:var(--text); }
+    .positive { color:var(--mint); } .negative { color:var(--red); }
+    .good { color:var(--lime); } .soft { color:#d7e4de; }
+    .period-badge { border:1px solid var(--line); color:var(--muted); border-radius:4px; padding:3px 5px; font-size:9px; }
+    .row-actions { display:flex; gap:4px; justify-content:flex-end; }
+    .row-action { border:1px solid var(--line); color:var(--muted); background:transparent; border-radius:5px; width:25px; height:24px; }
+    .row-action:hover, .row-action.starred { color:var(--lime); border-color:rgba(201,250,108,.4); }
+    .table-foot { display:flex; justify-content:space-between; gap:10px; padding:11px 13px; color:var(--muted-2); font:9px 'DM Mono', monospace; }
+    .foot-note { text-align:right; }
+    .bottom-grid { display:grid; grid-template-columns: 1.18fr .82fr; gap:13px; margin-top:14px; }
+    .recipes-panel, .sources-panel { padding:16px; }
+    .recipe-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:15px; }
+    .recipe { display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:8px; padding:10px; text-align:left; background:transparent; color:var(--text); border:1px solid var(--line); border-radius:8px; }
+    .recipe:hover, .recipe.active { border-color:rgba(201,250,108,.35); background:rgba(201,250,108,.05); }
+    .recipe-icon { color:var(--lime); font-size:16px; }
+    .recipe b { display:block; font-size:10px; }
+    .recipe small { display:block; color:var(--muted); font-size:9px; margin-top:4px; white-space:nowrap; }
+    .recipe em { color:var(--muted); font:10px 'DM Mono', monospace; font-style:normal; }
+    .source-list { display:grid; gap:9px; margin-top:15px; }
+    .source-list > div { display:grid; grid-template-columns:1fr auto auto; gap:9px; align-items:center; border-top:1px solid var(--line); padding-top:9px; color:var(--muted); font-size:10px; }
+    .source-list b { color:var(--text); font-weight:600; }
+    .source-list small { color:var(--muted-2); font:9px 'DM Mono', monospace; }
+    .source-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--blue); margin-right:6px; }
+    .source-dot.live { background:var(--mint); }
+    .source-disclaimer { color:var(--muted-2); border-top:1px solid var(--line); margin-top:12px; padding-top:10px; font-size:9px; line-height:1.4; }
+    .modal-backdrop { position:fixed; inset:0; display:none; background:rgba(3,6,7,.72); z-index:10; }
+    .modal-backdrop.open { display:block; }
+    .detail-drawer { position:absolute; right:0; top:0; bottom:0; width:min(510px,100%); background:#111a1e; border-left:1px solid var(--line-strong); box-shadow:-20px 0 60px rgba(0,0,0,.32); padding:30px 25px; overflow:auto; }
+    .close-button { position:absolute; right:20px; top:18px; border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:7px; width:30px; height:30px; font-size:19px; }
+    .close-button:hover { color:var(--lime); }
+    .detail-kicker { color:var(--lime); font:10px 'DM Mono',monospace; letter-spacing:.15em; text-transform:uppercase; }
+    .detail-title { display:flex; gap:12px; align-items:center; margin-top:15px; }
+    .detail-title .company-logo { width:43px; height:43px; border-radius:11px; font-size:14px; }
+    .detail-title h2 { margin:0; font-size:23px; letter-spacing:-.05em; }
+    .detail-title p { color:var(--muted); margin:4px 0 0; font-size:11px; }
+    .detail-price { display:flex; align-items:baseline; gap:12px; padding:20px 0 17px; border-bottom:1px solid var(--line); }
+    .detail-price strong { font:500 29px 'DM Mono',monospace; letter-spacing:-.07em; }
+    .detail-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; }
+    .detail-metric { border:1px solid var(--line); padding:10px; border-radius:7px; }
+    .detail-metric span { display:block; color:var(--muted); font-size:9px; }
+    .detail-metric b { display:block; margin-top:7px; font:12px 'DM Mono',monospace; color:var(--text); }
+    .detail-block { border-top:1px solid var(--line); margin-top:19px; padding-top:17px; }
+    .detail-block-head { display:flex; justify-content:space-between; align-items:center; }
+    .detail-block h3 { margin:0; font-size:12px; }
+    .detail-block small { color:var(--muted-2); font:9px 'DM Mono',monospace; }
+    .mini-chart { width:100%; height:80px; margin-top:10px; }
+    .detail-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+    .detail-tag { color:#b9d8a1; background:rgba(201,250,108,.08); border:1px solid rgba(201,250,108,.15); padding:5px 7px; border-radius:5px; font:9px 'DM Mono',monospace; }
+    .columns-popover { display:none; position:fixed; z-index:8; background:#182226; border:1px solid var(--line-strong); padding:12px; border-radius:9px; box-shadow:var(--shadow); right:50px; top:420px; width:150px; }
+    .columns-popover.open { display:grid; gap:9px; }
+    .popover-title { color:var(--muted); font:9px 'DM Mono',monospace; text-transform:uppercase; letter-spacing:.1em; padding-bottom:4px; border-bottom:1px solid var(--line); }
+    .columns-popover label { color:var(--text); font-size:10px; }
+    .columns-popover input { accent-color:var(--lime); }
+    #toast { position:fixed; right:26px; bottom:22px; background:#d8ff93; color:var(--ink); padding:10px 13px; border-radius:8px; font-size:11px; font-weight:700; box-shadow:var(--shadow); transform:translateY(20px); opacity:0; pointer-events:none; transition:.22s ease; z-index:20; }
+    #toast.show { transform:translateY(0); opacity:1; }
+    @media (max-width: 1100px) { :root { --sidebar: 215px; } .market-strip { grid-template-columns:repeat(4, minmax(140px,1fr)); } .index-card { min-width:140px; } .overview-grid { grid-template-columns:1fr; } .insights { min-height:0; } .bottom-grid { grid-template-columns:1fr; } }
+    @media (max-width: 790px) { .sidebar { width:65px; flex-basis:65px; padding:18px 9px; } .brand { padding:0 8px 25px; } .brand > div:last-child, .nav-label, .nav-copy, .nav-count, .feed-card { display:none; } .brand-mark { width:35px; height:35px; } .nav button { justify-content:center; padding:11px 0; } .nav-icon { font-size:17px; } .topbar { padding:0 16px; } .crumb { display:none; } .command { max-width:none; } .content { padding:24px 16px 45px; } .hero { align-items:start; flex-direction:column; } .hero-right { padding:0; } .metric-grid { grid-template-columns:repeat(2,1fr); } .screener-layout { grid-template-columns:1fr; } .filters-panel { display:grid; grid-template-columns:repeat(2,1fr); gap:0 14px; } .filter-top, .saved-screen, .filter-foot { grid-column:1 / -1; } .filter-group { padding-top:12px; } .recipe-grid { grid-template-columns:1fr; } }
+    @media (max-width: 530px) { .topbar { height:61px; } .top-actions { gap:5px; } .avatar { display:none; } .hero h1 { font-size:34px; } .source-pill { font-size:9px; } .market-strip { grid-template-columns:repeat(2, minmax(140px,1fr)); } .metric-grid { gap:7px; } .metric { padding:12px; } .metric-value { font-size:20px; } .section-header-row { align-items:start; flex-direction:column; } .filters-panel { display:block; } .toolbar-actions { flex-wrap:wrap; justify-content:flex-end; } .table-search { width:120px; } .results-toolbar { align-items:start; flex-direction:column; } .bottom-grid { margin-top:12px; } }
+  </style>
