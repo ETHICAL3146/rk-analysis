@@ -220,7 +220,8 @@
       el('saveScreen').addEventListener('click',()=>showToast('Screen saved to your workspace')); el('themeButton').addEventListener('click',()=>{document.body.classList.toggle('light');showToast(document.body.classList.contains('light')?'Light mode enabled':'Dark mode enabled');}); el('viewIndexDetails').addEventListener('click',()=>showToast('Index detail view is available in the research workspace'));
       document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();el('globalSearch').focus();} if(e.key==='Escape'){el('detailBackdrop').classList.remove('open');el('columnsPopover').classList.remove('open');}});
     }
-    init();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+    else init();
   </script>
 </body>
 </html>
